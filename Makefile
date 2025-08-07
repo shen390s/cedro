@@ -42,6 +42,7 @@ help-en:
 NAME=cedro
 
 # Strict compilation flags, use during development:
+CC = gcc
 CFLAGS=-g -fshort-enums -std=c99 -fmax-errors=4 -pedantic-errors -Wall -Werror -Wno-unused-function -Wno-unused-const-variable -Wsign-conversion -Wsign-compare
 # miniz has many implicit sign conversions, after removing some it works on
 # some manchines but it is not enough in others, so better ignore it:
@@ -80,7 +81,7 @@ bin/$(NAME)-new-debug: src/cedro-new.c template.zip Makefile bin/$(NAME)cc-debug
 	bin/$(NAME)cc-debug $< -I src $(CFLAGS_MINIZ) -o $@
 bin/$(NAME)-new:       src/cedro-new.c template.zip Makefile bin/$(NAME)cc
 	@mkdir -p bin
-	bin/$(NAME)cc       $< -I src $(CFLAGS_MINIZ) -o $@ $(OPTIMIZATION)
+	CEDRO_CC="$(CC) -x c - -x none" bin/$(NAME)cc       $< -I src $(CFLAGS_MINIZ) -o $@ $(OPTIMIZATION)
 
 bin/$(NAME)-static: src/cedro.c src/*.c src/*.h src/macros/*.h Makefile
 	@mkdir -p bin
@@ -90,14 +91,15 @@ bin/$(NAME)cc-static: src/cedrocc.c Makefile bin/$(NAME)
 	bin/$(NAME)       --insert-line-directives $< | $(CC) $(CFLAGS) -static -I src -x c - -o $@  $(OPTIMIZATION)
 bin/$(NAME)-new-static: src/cedro-new.c template.zip Makefile bin/$(NAME)cc
 	@mkdir -p bin
-	bin/$(NAME)cc -static $< -I src $(CFLAGS_MINIZ) -o $@ $(OPTIMIZATION)
+	CEDRO_CC="$(CC) -x c - -x none" bin/$(NAME)cc -static $< -I src $(CFLAGS_MINIZ) -o $@ $(OPTIMIZATION)
 
 bin/%: src/%.c Makefile bin/$(NAME)cc
 	@mkdir -p bin
-	bin/$(NAME)cc $< -I src $(CFLAGS_MINIZ) -o $@ $(OPTIMIZATION)
+	CEDRO_CC="$(CC) -x c - -x none" bin/$(NAME)cc $< -I src $(CFLAGS_MINIZ) -o $@ $(OPTIMIZATION)
 
 %.zip: % %/* %/*/* bin/zip-template
-	bin/zip-template $@ $<
+	# bin/zip-template $@ $<
+	zip $@ $<
 
 doc:
 	$(MAKE) -C doc
